@@ -22,7 +22,6 @@ function ensureExists(path, mask, cb) {
 
 http.createServer((req, res) => {
     if (req.method === 'POST') {
-        console.log('POST request');
         const bb = busboy({ headers: req.headers });
         let directory = '';
         let user = '';
@@ -75,6 +74,50 @@ http.createServer((req, res) => {
             res.end(resMsg);
         });
         req.pipe(bb);
+    }
+    else if (req.method === 'DELETE') {
+        const reqtype = req.headers.reqtype;
+        const filename = req.headers.filename;
+        const user = req.headers.user;
+        const doc = req.headers.doc;
+
+        const path = `files/${user}/${doc}/${filename}`;
+        unlink(path, (err) => {
+            if (err) {
+                console.error(err);
+                return {
+                    status: 500,
+                    body: {
+                        message: 'error remove file'
+                    }
+                };
+            }
+            //file removed
+
+            // // deleted dir if emprty
+            // readdir(`static/${dir}`, (err, files) => {
+            //     if (err)
+            //         console.log('readdir', err);
+            //     else {
+            //         console.log('directory files:', files, files.length);
+            //         if (files.length === 0) {
+            //             rmdir(`static/${dir}`, (err) => {
+            //                 if (err) {
+            //                     return console.log("error occurred in deleting directory", err);
+            //                 }
+            //                 //console.log("Directory deleted successfully");
+            //             });
+            //         }
+            //     }
+            // })
+
+        });
+        const obj = {
+            message: `file removed: ${filename}`,
+            deleted: true
+        };
+        const resObj = JSON.stringify(obj);
+        res.end(resObj);
     }
     else if (req.method === 'GET') {
         let filePath = `.${req.url}`;
