@@ -48,7 +48,7 @@ http.createServer((req, res) => {
                         encoding,
                         mimeType
                     );
-                    file.pipe(createWriteStream(`files/${user}/${directory}/${filename}`));
+                    file.pipe(createWriteStream(`files/${user}/${directory}/${encodeURIComponent(filename)}`));
                     //writeFile(`static/${dir}/${fileName}`, file, 'base64', (err) => {
                     //     if (err) { console.log('file err', err); }
                     //     // else {
@@ -81,7 +81,7 @@ http.createServer((req, res) => {
         const user = req.headers.user;
         const doc = req.headers.doc;
 
-        const path = `files/${user}/${doc}/${filename}`;
+        const path = `files/${user}/${doc}/${encodeURIComponent(filename)}`;
         unlink(path, (err) => {
             if (err) {
                 console.error(err);
@@ -126,8 +126,10 @@ http.createServer((req, res) => {
         }
         readFile(filePath, function (err, data) {
             if (err) {
-                res.writeHead(404);
-                res.end(JSON.stringify(err));
+                res.writeHead(400, { 'Content-type': 'text/html' });
+                console.log('file server error:', err);
+                //res.end(JSON.stringify(err));
+                res.end("File not found");
                 return;
             }
             res.writeHead(200);
