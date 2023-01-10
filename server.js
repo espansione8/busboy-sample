@@ -24,18 +24,19 @@ http.createServer((req, res) => {
     if (req.method === 'POST') {
         const bb = busboy({ headers: req.headers });
         let directory = '';
-        let user = '';
+        //let user = '';
         bb.on('field', (name, val, info) => {
-            console.log(`Field [${name}]: value: %j`, val);
+            //console.log(`Field [${name}]: value: %j`, val);
             if (name === 'directory') {
                 directory = val;
             }
-            if (name === 'user') {
-                user = val;
-            }
+            // if (name === 'user') {
+            //     user = val;
+            // }
         });
         bb.on('file', (name, file, info) => {
-            ensureExists(`files/${user}/${directory}`, 0o744, function (err) {
+            // ensureExists(`files/${user}/${directory}`, 0o744, function (err) { // REMOVED USER DIR for property transfer
+            ensureExists(`files/${directory}`, 0o744, function (err) {
                 if (err) {
                     console.log('upload err', err);
                     res.writeHead(500, { Connection: 'close' });
@@ -48,7 +49,8 @@ http.createServer((req, res) => {
                         encoding,
                         mimeType
                     );
-                    file.pipe(createWriteStream(`files/${user}/${directory}/${encodeURIComponent(filename)}`));
+                    //file.pipe(createWriteStream(`files/${user}/${directory}/${encodeURIComponent(filename)}`)); // REMOVED USER DIR for property transfer
+                    file.pipe(createWriteStream(`files/${directory}/${encodeURIComponent(filename)}`));
                     //writeFile(`static/${dir}/${fileName}`, file, 'base64', (err) => {
                     //     if (err) { console.log('file err', err); }
                     //     // else {
@@ -81,7 +83,8 @@ http.createServer((req, res) => {
         const user = req.headers.user;
         const doc = req.headers.doc;
 
-        const path = `files/${user}/${doc}/${encodeURIComponent(filename)}`;
+        //const path = `files/${user}/${doc}/${encodeURIComponent(filename)}`; // REMOVED USER DIR for property transfer
+        const path = `files/${doc}/${encodeURIComponent(filename)}`;
         unlink(path, (err) => {
             if (err) {
                 console.error(err);
