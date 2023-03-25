@@ -81,7 +81,21 @@ http.createServer((req, res) => {
         const reqtype = req.headers.reqtype;
         const filename = req.headers.filename;
         const user = req.headers.user;
-        const doc = req.headers.doc;
+        let doc = req.headers.doc;
+
+        if (reqtype == 'fileDoc') {
+            doc = req.headers.doc;
+        } else if (reqtype == 'fileVehicle') {
+            doc = `vehicles/${req.headers.doc}`;
+        } else {
+            console.error(err);
+            return {
+                status: 500,
+                body: {
+                    message: 'error remove file (OPT)'
+                }
+            };
+        }
 
         //const path = `files/${user}/${doc}/${encodeURIComponent(filename)}`; // REMOVED USER DIR for property transfer
         const path = `files/${doc}/${encodeURIComponent(filename)}`;
