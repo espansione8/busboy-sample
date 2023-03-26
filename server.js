@@ -87,12 +87,14 @@ http.createServer((req, res) => {
             doc = req.headers.doc;
         } else if (reqtype == 'fileVehicle') {
             doc = `vehicles/${req.headers.doc}`;
+        } else if (reqtype == 'fileVehicleEvent') {
+            doc = `vehicles/${req.headers.doc}/events`;
         } else {
             console.error(err);
             return {
                 status: 500,
                 body: {
-                    message: 'error remove file (OPT)'
+                    message: 'error remove file (options)'
                 }
             };
         }
