@@ -107,7 +107,8 @@ http.createServer((req, res) => {
                 return {
                     status: 500,
                     body: {
-                        message: 'error remove file'
+                        message: 'error remove file',
+                        deleted: false
                     }
                 };
             }
