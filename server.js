@@ -4,7 +4,7 @@
 
 import http from 'http';
 //import fs from 'fs';
-import { createWriteStream, mkdir, readFile, unlink, readdir, rmdir } from 'fs';
+import { createWriteStream, mkdir, readFile, unlink, rm, readdir, rmdir } from 'fs';
 import busboy from 'busboy';
 
 function ensureExists(path, mask, cb) {
@@ -21,141 +21,173 @@ function ensureExists(path, mask, cb) {
 }
 
 http.createServer((req, res) => {
-    if (req.method === 'POST') {
-        const bb = busboy({ headers: req.headers });
-        let directory = '';
-        //let user = '';
-        bb.on('field', (name, val, info) => {
-            //console.log(`Field [${name}]: value: %j`, val);
-            if (name === 'directory') {
-                directory = val;
-            }
-            // if (name === 'user') {
-            //     user = val;
-            // }
-        });
-        bb.on('file', (name, file, info) => {
-            // ensureExists(`files/${user}/${directory}`, 0o744, function (err) { // REMOVED USER DIR for property transfer
-            ensureExists(`files/${directory}`, 0o744, function (err) {
-                if (err) {
-                    console.log('upload err', err);
-                    res.writeHead(500, { Connection: 'close' });
-                    res.end();
-                } else {
-                    const { filename, encoding, mimeType } = info;
-                    console.log(
-                        `File [${name}]: filename: %j, encoding: %j, mimeType: %j`,
-                        filename,
-                        encoding,
-                        mimeType
-                    );
-                    //file.pipe(createWriteStream(`files/${user}/${directory}/${encodeURIComponent(filename)}`)); // REMOVED USER DIR for property transfer
-                    file.pipe(createWriteStream(`files/${directory}/${encodeURIComponent(filename)}`));
-                    //writeFile(`static/${dir}/${fileName}`, file, 'base64', (err) => {
-                    //     if (err) { console.log('file err', err); }
-                    //     // else {
-                    //     //     console.log("File written successfully\n");
-                    //     // }
-                    // }
-                    //)
-                    //file.pipe(createWriteStream(`/github/busboy-sample/files/${filename}`));
-                    file.on('data', (data) => {
-                        console.log(`File [${filename}] got ${data.length} bytes`);
-                    }).on('close', () => {
-                        console.log(`File [${filename}] done`);
-                    });
+    try {
+        if (req.method === 'POST') {
+            const bb = busboy({ headers: req.headers });
+            let directory = '';
+            //let user = '';
+            bb.on('field', (name, val, info) => {
+                //console.log(`Field [${name}]: value: %j`, val);
+                if (name === 'directory') {
+                    directory = val;
                 }
+                // if (name === 'user') {
+                //     user = val;
+                // }
             });
-        });
-
-        bb.on('close', () => {
-            console.log('Done parsing form!');
-            //res.writeHead(303, { Connection: 'close' });
-            //res.writeHead(303, { Connection: 'close', Location: '/' });
-            const resMsg = JSON.stringify({ filesUpload: 'ok' });
-            res.end(resMsg);
-        });
-        req.pipe(bb);
-    }
-    else if (req.method === 'DELETE') {
-        const reqtype = req.headers.reqtype;
-        const filename = req.headers.filename;
-        const user = req.headers.user;
-        let doc = req.headers.doc;
-
-        if (reqtype == 'fileDoc') {
-            doc = req.headers.doc;
-        } else if (reqtype == 'fileVehicle') {
-            doc = `vehicles/${req.headers.doc}`;
-        } else if (reqtype == 'fileVehicleEvent') {
-            doc = `vehicles/${req.headers.doc}/events`;
-        } else {
-            console.error(err);
-            return {
-                status: 500,
-                body: {
-                    message: 'error remove file (options)'
-                }
-            };
-        }
-
-        //const path = `files/${user}/${doc}/${encodeURIComponent(filename)}`; // REMOVED USER DIR for property transfer
-        const path = `files/${doc}/${encodeURIComponent(filename)}`;
-        unlink(path, (err) => {
-            if (err) {
-                console.error(err);
-                return {
-                    status: 500,
-                    body: {
-                        message: 'error remove file',
-                        deleted: false
+            bb.on('file', (name, file, info) => {
+                // ensureExists(`files/${user}/${directory}`, 0o744, function (err) { // REMOVED USER DIR for property transfer
+                ensureExists(`files/${directory}`, 0o744, function (err) {
+                    if (err) {
+                        console.log('upload err', err);
+                        res.writeHead(500, { Connection: 'close' });
+                        res.end();
+                    } else {
+                        const { filename, encoding, mimeType } = info;
+                        console.log(
+                            `File [${name}]: filename: %j, encoding: %j, mimeType: %j`,
+                            filename,
+                            encoding,
+                            mimeType
+                        );
+                        //file.pipe(createWriteStream(`files/${user}/${directory}/${encodeURIComponent(filename)}`)); // REMOVED USER DIR for property transfer
+                        file.pipe(createWriteStream(`files/${directory}/${encodeURIComponent(filename)}`));
+                        //writeFile(`static/${dir}/${fileName}`, file, 'base64', (err) => {
+                        //     if (err) { console.log('file err', err); }
+                        //     // else {
+                        //     //     console.log("File written successfully\n");
+                        //     // }
+                        // }
+                        //)
+                        //file.pipe(createWriteStream(`/github/busboy-sample/files/${filename}`));
+                        file.on('data', (data) => {
+                            console.log(`File [${filename}] got ${data.length} bytes`);
+                        }).on('close', () => {
+                            console.log(`File [${filename}] done`);
+                        });
                     }
-                };
-            }
-            //file removed
+                });
+            });
 
-            // // deleted dir if emprty
-            // readdir(`static/${dir}`, (err, files) => {
-            //     if (err)
-            //         console.log('readdir', err);
-            //     else {
-            //         console.log('directory files:', files, files.length);
-            //         if (files.length === 0) {
-            //             rmdir(`static/${dir}`, (err) => {
-            //                 if (err) {
-            //                     return console.log("error occurred in deleting directory", err);
-            //                 }
-            //                 //console.log("Directory deleted successfully");
-            //             });
-            //         }
-            //     }
-            // })
-
-        });
-        const obj = {
-            message: `file removed: ${filename}`,
-            deleted: true
-        };
-        const resObj = JSON.stringify(obj);
-        res.end(resObj);
-    }
-    else if (req.method === 'GET') {
-        let filePath = `.${req.url}`;
-        if (filePath === './') {
-            filePath = './index.html';
+            bb.on('close', () => {
+                console.log('Done parsing form!');
+                //res.writeHead(303, { Connection: 'close' });
+                //res.writeHead(303, { Connection: 'close', Location: '/' });
+                const resMsg = JSON.stringify({ filesUpload: 'ok' });
+                res.end(resMsg);
+            });
+            req.pipe(bb);
         }
-        readFile(filePath, function (err, data) {
-            if (err) {
-                res.writeHead(400, { 'Content-type': 'text/html' });
-                console.log('file server error:', err);
-                //res.end(JSON.stringify(err));
-                res.end("File not found");
-                return;
-            }
-            res.writeHead(200);
-            res.end(data);
-        });
+        else if (req.method === 'DELETE') {
+            let delBool = true;
+            let delRes = 'file removal err:';
+            const reqtype = req.headers.reqtype;
+            const filename = req.headers.filename;
+            //const user = req.headers.user;
+            let doc = req.headers.doc;
 
+            if (reqtype == 'fileDoc') {
+                doc = req.headers.doc;
+                const pathDoc = `files/${doc}/${encodeURIComponent(filename)}`;
+                unlink(pathDoc, (err) => {
+                    if (err) {
+                        console.error('Event unlink err', err);
+                        delRes = 'error DELETE file:';
+                        delBool = false;
+                        throw new Error('Event unlink err');
+                    } else {
+                        const obj = {
+                            delRes = 'DELETED Document file:';
+                            message: `${delRes} ${filename}`,
+                            deleted: delBool
+                        };
+                        const resObj = JSON.stringify(obj);
+                        res.end(resObj);
+                    }
+                });
+            } else if (reqtype == 'fileVehicle') {
+                doc = `vehicles/${req.headers.doc}`;
+                const pathVehicle = `files/${doc}/${encodeURIComponent(filename)}`;
+                unlink(pathVehicle, (err) => {
+                    if (err) {
+                        console.error('Event unlink err', err);
+                        delRes = 'error DELETE file:';
+                        delBool = false;
+                        throw new Error('Event unlink err');
+                    } else {
+                        delRes = 'DELETED Vehicle file:';
+                        const obj = {
+                            message: `${delRes} ${filename}`,
+                            deleted: delBool
+                        };
+                        const resObj = JSON.stringify(obj);
+                        res.end(resObj);
+                    }
+                });
+            } else if (reqtype == 'fileVehicleEvent') {
+                const delPath = `files/vehicles/${req.headers.doc}/events/${filename}`;
+                rm(delPath, { recursive: true }, (err) => {
+                    if (err) {
+                        console.error('Event delDir err (rm)', err);
+                        delRes = 'error DELETE Event dir (rm):';
+                        delBool = false;
+                        throw new Error('Event delDir err (rm)');
+                    } else {
+                        delRes = 'DELETED Event dir:';
+                        const obj = {
+                            message: `${delRes} ${filename}`,
+                            deleted: delBool
+                        };
+                        const resObj = JSON.stringify(obj);
+                        res.end(resObj);
+                    }
+                });
+            } else {
+                console.error('Event delDir err (reqtype)');
+                delRes = 'error DELETE Event dir (reqtype):';
+                delBool = false;
+                throw new Error('Event delDir err (reqtype)');
+            }
+
+            // const path = `files/${user}/${doc}/${encodeURIComponent(filename)}`; // REMOVED USER DIR for property transfer
+            // const path = `files/${doc}/${encodeURIComponent(filename)}`;
+            // unlink(path, (err) => {
+            //     if (err) {
+            //         console.error('Event unlink err', err);
+            //         delRes = 'error DELETE file:';
+            //         delBool = false;
+            //         throw new Error('Event unlink err');
+            //     }
+            // });
+            ////////////// API response
+            // const obj = {
+            //     message: `${delRes} ${filename}`,
+            //     deleted: delBool
+            // };
+            // const resObj = JSON.stringify(obj);
+            // res.end(resObj);
+        }
+        else if (req.method === 'GET') {
+            let filePath = `.${req.url}`;
+            if (filePath === './') {
+                filePath = './index.html';
+            }
+            readFile(filePath, function (err, data) {
+                if (err) {
+                    res.writeHead(400, { 'Content-type': 'text/html' });
+                    console.log('file server error:', err);
+                    //res.end(JSON.stringify(err));
+                    res.end("File not found");
+                    return;
+                }
+                res.writeHead(200);
+                res.end(data);
+            });
+
+        }
+    } catch (err) {
+        res.statusCode = 500;
+        res.end(`Error: ${err.message}`);
     }
 }).listen(3100, () => {
     console.log('Listening 3100 for requests');
