@@ -96,8 +96,8 @@ http.createServer((req, res) => {
                         delBool = false;
                         throw new Error('Event unlink err');
                     } else {
+                        delRes = 'DELETED Document file:';
                         const obj = {
-                            delRes = 'DELETED Document file:';
                             message: `${delRes} ${filename}`,
                             deleted: delBool
                         };
@@ -180,7 +180,9 @@ http.createServer((req, res) => {
                     res.end("File not found");
                     return;
                 }
-                res.writeHead(200);
+                res.writeHead(200, {
+                    "Access-Control-Allow-Origin": "*"
+                });
                 res.end(data);
             });
 
