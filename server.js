@@ -142,6 +142,25 @@ http.createServer((req, res) => {
                         res.end(resObj);
                     }
                 });
+            } else if (reqtype == 'fileLogistic') {
+                doc = `logistic/${req.headers.doc}`;
+                const pathLogistic = `files/${doc}/${encodeURIComponent(filename)}`;
+                unlink(pathLogistic, (err) => {
+                    if (err) {
+                        console.error('Event unlink err', err);
+                        delRes = 'error DELETE file:';
+                        delBool = false;
+                        throw new Error('Event unlink err');
+                    } else {
+                        delRes = 'DELETED Logistic file:';
+                        const obj = {
+                            message: `${delRes} ${filename}`,
+                            deleted: delBool
+                        };
+                        const resObj = JSON.stringify(obj);
+                        res.end(resObj);
+                    }
+                });
             } else {
                 console.error('Event delDir err (reqtype)');
                 delRes = 'error DELETE Event dir (reqtype):';
