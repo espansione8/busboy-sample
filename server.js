@@ -161,6 +161,46 @@ http.createServer((req, res) => {
                         res.end(resObj);
                     }
                 });
+            } else if (reqtype == 'userId') {
+                // doc = `users/${req.headers.doc}/id`;
+                // const pathLogistic = `files/${doc}/${encodeURIComponent(filename)}`;
+                const pathLogistic = `files/users/${req.headers.doc}/id/${encodeURIComponent(filename)}`;
+                unlink(pathLogistic, (err) => {
+                    if (err) {
+                        console.error('Event unlink err', err);
+                        delRes = 'error DELETE file ID:';
+                        delBool = false;
+                        throw new Error('Event unlink err');
+                    } else {
+                        delRes = 'DELETED user file ID:';
+                        const obj = {
+                            message: `${delRes} ${filename}`,
+                            deleted: delBool
+                        };
+                        const resObj = JSON.stringify(obj);
+                        res.end(resObj);
+                    }
+                });
+            } else if (reqtype == 'userCompany') {
+                // doc = `users/${req.headers.doc}/company`;
+                // const pathLogistic = `files/${doc}/${encodeURIComponent(filename)}`;
+                const pathLogistic = `files/users/${req.headers.doc}/company/${encodeURIComponent(filename)}`;
+                unlink(pathLogistic, (err) => {
+                    if (err) {
+                        console.error('Event unlink err', err);
+                        delRes = 'error DELETE file Company:';
+                        delBool = false;
+                        throw new Error('Event unlink err');
+                    } else {
+                        delRes = 'DELETED user file Company:';
+                        const obj = {
+                            message: `${delRes} ${filename}`,
+                            deleted: delBool
+                        };
+                        const resObj = JSON.stringify(obj);
+                        res.end(resObj);
+                    }
+                });
             } else {
                 console.error('Event delDir err (reqtype)');
                 delRes = 'error DELETE Event dir (reqtype):';
