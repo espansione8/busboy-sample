@@ -1,6 +1,6 @@
 {
 	"name": "upload-server",
-	"version": "0.1.8",
+	"version": "0.1.9",
 	"dependencies": {
 		"busboy": "^1.6.0"
 	},
