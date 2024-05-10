@@ -41,7 +41,7 @@ http.createServer((req, res) => {
                     if (err) {
                         console.log('upload err', err);
                         res.writeHead(500, { Connection: 'close' });
-                        res.end();
+                        res.end(`dir / file Error: ${err.message}`);
                     } else {
                         const { filename, encoding, mimeType } = info;
                         console.log(
